@@ -1,5 +1,6 @@
+import org.apache.spark.ml.regression.LinearRegression
+import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.sql.{SQLContext, SparkSession}
-import org.apache.spark.{SparkConf, SparkContext}
 
 /**
  * @author Paul Doucet (316442)
@@ -15,13 +16,18 @@ object Main {
       .getOrCreate()
 
 
-    val df = spark.read.option("header", "true").csv("datasets/2009.csv")
+    var df = spark.read.option("header", "true").csv("datasets/2009.csv")
 
-    val columns = df.columns
+    df = df.select("DEP_TIME", "DEP_DELAY", "TAXI_OUT")
+
+    val rdd = df.rdd
+
+    val splits = rdd.randomSplit(Array(0.7, 0.3), seed = 11L)
+    val training = splits(0).cache()
+    val test = splits(1)
+
+    val numIterations = 100
 
     df.show()
-    //val first = df.first()
-
-    //println(first)
   }
 }
