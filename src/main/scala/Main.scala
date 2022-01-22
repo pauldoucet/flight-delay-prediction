@@ -1,6 +1,7 @@
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.ml.tuning.{CrossValidator, TrainValidationSplit}
 import org.apache.spark.mllib.classification.SVMWithSGD
@@ -32,18 +33,9 @@ object Main {
       .select("DEP_TIME", "DEP_DELAY", "TAXI_OUT", "ARR_DELAY")
       .na.drop()
 
-    //df.dtypes.foreach(s => print(s"{${s._1}, ${s._2}}"))
-
-    //df.show()
-
     val assembler = new VectorAssembler()
       .setHandleInvalid("skip")
       .setInputCols(feature_cols).setOutputCol("FEATURES")
-    //df = assembler.transform(df)
-
-    /*val splits = df.randomSplit(Array(0.7, 0.3), seed = 11L)
-    val training = splits(0).cache()
-    val test = splits(1)*/
 
     val numIterations = 100
 
@@ -54,13 +46,21 @@ object Main {
 
     val pipeline = new Pipeline().setStages(Array(assembler, lr))
 
-    val trainValidationSplit = new TrainValidationSplit()
-      .setEstimator(pipeline)
-      .setEvaluator(new RegressionEvaluator())
+    val splits = df.randomSplit(Array(0.7, 0.3), seed = 11L)
+    val training = splits(0).cache()
+    val test = splits(1)
 
-
+    val model = pipeline.fit(training)
 
     val predicted = model.transform(test)
+
+    val r2 = new RegressionEvaluator()
+      .setLabelCol("ARR_DELAY")
+      .setPredictionCol("prediction")
+      .setMetricName("r2")
+      .evaluate(predicted)
+
+    println(s"model got r^2 = $r2")
 
     predicted.show()
   }
