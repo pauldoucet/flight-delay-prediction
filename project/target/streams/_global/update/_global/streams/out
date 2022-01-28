@@ -1,3 +1,5 @@
 [debug] not up to date. inChanged = true, force = false
-[debug] Updating ProjectRef(uri("file:/D:/flight-delay-prediction/project/"), "flight-delay-prediction-build")...
-[debug] Done updating ProjectRef(uri("file:/D:/flight-delay-prediction/project/"), "flight-delay-prediction-build")
+[debug] Updating ProjectRef(uri("file:/C:/Users/Paul/OneDrive/ca.uwaterloo/Datascience%20projects/flight-delay-prediction/project/"), "flight-delay-prediction-build")...
+[warn] Unrecognized repository Scala Plugin Bundled Repository, ignoring it
+[warn] Unrecognized repository Scala Plugin Bundled Repository, ignoring it
+[debug] Done updating ProjectRef(uri("file:/C:/Users/Paul/OneDrive/ca.uwaterloo/Datascience%20projects/flight-delay-prediction/project/"), "flight-delay-prediction-build")
