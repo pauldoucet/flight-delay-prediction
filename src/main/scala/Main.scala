@@ -1,7 +1,9 @@
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.regression.LinearRegression
+import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
 
@@ -44,23 +46,15 @@ object Main {
 
     val pipeline = new Pipeline().setStages(Array(assembler, lr))
 
-    val splits = df.randomSplit(Array(0.7, 0.3), seed = 11L)
-    val training = splits(0).cache()
-    val test = splits(1)
+    val paramGrid = new ParamGridBuilder()
+      .build()
 
-    val model = pipeline.fit(training)
+    val trainValidator = new TrainValidationSplit()
+      .setEstimator(pipeline)
+      .setEvaluator(new RegressionEvaluator().setLabelCol("ARR_DELAY"))
+      .setEstimatorParamMaps(paramGrid)
+      .setTrainRatio(0.8)
 
-    val predicted = model.transform(test)
-
-    val r2 = new RegressionEvaluator()
-      .setLabelCol("ARR_DELAY")
-      .setPredictionCol("prediction")
-      .setMetricName("r2")
-      .evaluate(predicted)
-
-    println(s"model got r^2 = $r2")
-
-    System.in.read
-    spark.stop // spark --> SparkSession
+    val model = trainValidator.fit(df)
   }
 }
