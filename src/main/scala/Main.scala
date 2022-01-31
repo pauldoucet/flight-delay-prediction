@@ -21,8 +21,14 @@ object Main {
       .getOrCreate()
 
 
+    // Set of input features column names
     val feature_cols = Array("DEP_TIME", "DEP_DELAY", "TAXI_OUT")
 
+    // Load csv file as a spark Dataframe
+    // we convert every column from string to double
+    // we only select features useful for training our model (i.e. "DEP_TIME", "DEP_DELAY", "TAXI_OUT")
+    // we also select the output column ("ARR_DELAY")
+    // Finally we drop any column containing null elements
     val df = spark.read.option("header", "true")
       //.csv("s3://flight-delays-analytic/datasets/2009.csv")
       .csv("datasets/2009.csv")
@@ -33,22 +39,28 @@ object Main {
       .select("DEP_TIME", "DEP_DELAY", "TAXI_OUT", "ARR_DELAY")
       .na.drop()
 
+    // We create a vector assembler to gather all out input columns in a single "FEATURES" column
     val assembler = new VectorAssembler()
       .setHandleInvalid("skip")
       .setInputCols(feature_cols).setOutputCol("FEATURES")
 
     val numIterations = 100
 
+    // We instantiate the linear regression model
     val lr = new LinearRegression()
       .setFeaturesCol("FEATURES")
       .setLabelCol("ARR_DELAY")
       .setMaxIter(numIterations)
 
+    // pipeline containing the features column assembling phase, and our linear regression model
     val pipeline = new Pipeline().setStages(Array(assembler, lr))
 
+    // empty parameter grid
     val paramGrid = new ParamGridBuilder()
       .build()
 
+    // we train our model with a trainValidationSplit which will optimize the hyper-parameters
+    // using a validation set
     val trainValidator = new TrainValidationSplit()
       .setEstimator(pipeline)
       .setEvaluator(new RegressionEvaluator().setLabelCol("ARR_DELAY"))
